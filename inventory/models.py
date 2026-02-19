@@ -245,8 +245,10 @@ class Notification(models.Model):
     notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
     priority = models.CharField(max_length=10, choices=PRIORITY_LEVELS, default='medium')
     target_user_role = models.CharField(max_length=20, default='inventory')  # inventory, marketing, admin, all
+    target_user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='targeted_notifications')  # Specific user target
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
     is_read = models.BooleanField(default=False)
+    read_by = models.ManyToManyField(User, blank=True, related_name='read_notifications')  # Track which users have read it
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)  # Track when notification was last updated (marked as read)
     expires_at = models.DateTimeField(null=True, blank=True)  # Auto-delete after this time

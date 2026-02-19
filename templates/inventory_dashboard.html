@@ -461,6 +461,7 @@
                                         <th><i class="fas fa-rupee-sign me-1"></i>Current Price</th>
                                         <th><i class="fas fa-chart-bar me-1"></i>Class</th>
                                         <th><i class="fas fa-warehouse me-1"></i>My Stock</th>
+                                        <th><i class="fas fa-boxes me-1"></i>Total Stock</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -481,10 +482,15 @@
                                                 {{ product.user_stock }} units
                                             </span>
                                         </td>
+                                        <td>
+                                            <span class="badge {% if product.total_stock < 20 %}bg-danger{% elif product.total_stock < 100 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                                {{ product.total_stock }} units
+                                            </span>
+                                        </td>
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted py-4">
+                                        <td colspan="8" class="text-center text-muted py-4">
                                             <i class="fas fa-box-open fa-2x mb-2"></i>
                                             <br>No products available
                                         </td>
@@ -564,12 +570,54 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('🚀 Initializing notification system...');
     
+    // Helper function to get CSRF token from cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // Get CSRF token (from cookie or hidden input)
+    function getCSRFToken() {
+        // Try to get from hidden input first
+        const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (csrfInput && csrfInput.value) {
+            return csrfInput.value;
+        }
+        // Fallback to cookie
+        return getCookie('csrftoken');
+    }
+    
     // Global functions for template usage
     window.showNotifications = function() {
         console.log('🔔 Bell icon clicked');
-        const panel = document.getElementById('notifications-panel');
-        if (panel) {
-            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        // Activate the notifications tab
+        const notificationsTab = document.getElementById('notifications-tab');
+        if (notificationsTab) {
+            // Use Bootstrap's tab API to show the tab
+            const tab = new bootstrap.Tab(notificationsTab);
+            tab.show();
+            console.log('✅ Notifications tab activated');
+            
+            // Scroll to the tab content
+            setTimeout(() => {
+                const panel = document.getElementById('notifications-panel');
+                if (panel) {
+                    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100);
+        } else {
+            console.log('❌ Notifications tab not found');
         }
     };
     
@@ -602,8 +650,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // Get CSRF token
-                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
-                if (!csrfToken) {
+                const csrfTokenValue = getCSRFToken();
+                if (!csrfTokenValue) {
                     alert('Error: CSRF token not found. Please refresh the page.');
                     return;
                 }
@@ -617,17 +665,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 console.log('📡 Sending AJAX request...');
                 
-                // Create form data
-                const formData = new FormData();
-                formData.append('csrfmiddlewaretoken', csrfToken.value);
-                formData.append('notification_id', notificationId);
-                
-                // Send AJAX request
-                fetch('/inventory/', {
+                // Send AJAX request to the correct endpoint
+                fetch(`/mark-notification-read/${notificationId}/`, {
                     method: 'POST',
-                    body: formData,
                     headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfTokenValue,
+                        'Content-Type': 'application/json'
                     }
                 })
                 .then(response => {
@@ -732,8 +776,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // Get CSRF token
-                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
-                if (!csrfToken) {
+                const csrfTokenValue = getCSRFToken();
+                if (!csrfTokenValue) {
                     alert('Error: CSRF token not found. Please refresh the page.');
                     return;
                 }
@@ -749,7 +793,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Create form data
                 const formData = new FormData();
-                formData.append('csrfmiddlewaretoken', csrfToken.value);
+                formData.append('csrfmiddlewaretoken', csrfTokenValue);
                 formData.append('order_id', notificationId); // Use notification ID to find order
                 
                 // Send AJAX request to acknowledge order
@@ -757,7 +801,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken.value
                     }
                 })
                 .then(response => {
@@ -848,8 +893,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // Get CSRF token
-                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
-                if (!csrfToken) {
+                const csrfTokenValue = getCSRFToken();
+                if (!csrfTokenValue) {
                     alert('Error: CSRF token not found. Please refresh the page.');
                     return;
                 }
@@ -869,9 +914,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfTokenValue
                     },
-                    body: `csrfmiddlewaretoken=${csrfToken.value}&notification_id=${notificationId}&status=ordered`
+                    body: `csrfmiddlewaretoken=${csrfTokenValue}&notification_id=${notificationId}&status=ordered`
                 })
                 .then(response => {
                     console.log('📨 Response status:', response.status);
@@ -1121,15 +1167,94 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Function to show full admin message
 function showFullMessage(notificationId) {
-    // Simple alert for now - can be enhanced with modal later
-    alert(`Viewing full details for notification ID: ${notificationId}`);
+    // Find the notification card
+    const notificationCard = document.querySelector(`[data-notification-id="${notificationId}"]`).closest('.card');
     
-    // Mark as read after viewing
+    if (!notificationCard) {
+        alert('Notification not found');
+        return;
+    }
+    
+    // Extract notification details
+    const title = notificationCard.querySelector('.card-title').textContent.trim();
+    const message = notificationCard.querySelector('.card-text').textContent.trim();
+    const priorityBadge = notificationCard.querySelector('.badge');
+    const priority = priorityBadge ? priorityBadge.textContent.trim() : 'Medium';
+    const productInfo = notificationCard.querySelector('.text-info');
+    const product = productInfo ? productInfo.textContent.trim() : 'N/A';
+    const timeInfo = notificationCard.querySelector('.text-muted');
+    const time = timeInfo ? timeInfo.textContent.trim() : '';
+    
+    // Create modal HTML
+    const modalHTML = `
+        <div class="modal fade" id="notificationModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-bell me-2"></i>${title}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <span class="badge bg-${priority === 'URGENT' ? 'danger' : priority === 'HIGH' ? 'warning' : priority === 'MEDIUM' ? 'info' : 'secondary'} mb-2">
+                                ${priority}
+                            </span>
+                        </div>
+                        <div class="mb-3">
+                            <h6 class="text-muted">Message:</h6>
+                            <div class="p-3 bg-light rounded" style="white-space: pre-wrap;">${message}</div>
+                        </div>
+                        <div class="mb-3">
+                            <h6 class="text-muted">Product:</h6>
+                            <p class="mb-0">${product}</p>
+                        </div>
+                        <div class="text-muted small">
+                            <i class="fas fa-clock me-1"></i>${time}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-success" onclick="acknowledgeFromModal('${notificationId}')">
+                            <i class="fas fa-check me-1"></i>Acknowledge
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('notificationModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
+    modal.show();
+    
+    // Clean up modal after it's hidden
+    document.getElementById('notificationModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+}
+
+function acknowledgeFromModal(notificationId) {
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('notificationModal'));
+    if (modal) {
+        modal.hide();
+    }
+    
+    // Click the acknowledge button
     const readBtn = document.querySelector(`[data-notification-id="${notificationId}"].mark-read-btn`);
     if (readBtn) {
-        setTimeout(() => {
-            readBtn.click();
-        }, 1000);
+        readBtn.click();
     }
 }
 </script>

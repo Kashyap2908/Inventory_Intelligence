@@ -191,7 +191,7 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th><i class="fas fa-box me-1"></i>Product</th>
-                                        <th><i class="fas fa-warehouse me-1"></i>Company Stock</th>
+                                        <th><i class="fas fa-warehouse me-1"></i>Total Stock</th>
                                         <th><i class="fas fa-tag me-1"></i>ABC Class</th>
                                         <th><i class="fas fa-chart-line me-1"></i>Trend Score</th>
                                         <th><i class="fas fa-calendar-alt me-1"></i>Expiry Status</th>
@@ -214,8 +214,8 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="badge {% if item.product.get_company_stock < 50 %}bg-danger{% elif item.product.get_company_stock < 100 %}bg-warning text-dark{% else %}bg-success{% endif %}">
-                                                <i class="fas fa-warehouse me-1"></i>{{ item.product.get_company_stock }} units
+                                            <span class="badge {% if item.total_stock < 50 %}bg-danger{% elif item.total_stock < 100 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                                <i class="fas fa-warehouse me-1"></i>{{ item.total_stock }} units
                                             </span>
                                         </td>
                                         <td>
@@ -405,6 +405,7 @@
                                         <div class="card-body">
                                             <form method="post" class="notification-form">
                                                 {% csrf_token %}
+                                                <input type="hidden" name="send_notification" value="1">
                                                 <div class="row">
                                                     <div class="col-6 mb-3">
                                                         <label for="product_name" class="form-label fw-semibold">
@@ -438,6 +439,17 @@
                                                     <textarea class="form-control" id="admin_recommendation" name="admin_recommendation" 
                                                               rows="3" placeholder="Type your message here..." required></textarea>
                                                 </div>
+                                                <div class="mb-3">
+                                                    <label for="target_user" class="form-label fw-semibold">
+                                                        <i class="fas fa-user me-1 text-primary"></i>Send To
+                                                    </label>
+                                                    <select class="form-select" id="target_user" name="target_user">
+                                                        <option value="all">📢 All Inventory Managers</option>
+                                                        {% for user in inventory_users_for_dropdown %}
+                                                        <option value="{{ user.id }}">👤 {{ user.userprofile.display_name }} ({{ user.userprofile.store_name }})</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
                                                 <div class="mb-4">
                                                     <label for="notification_priority" class="form-label fw-semibold">
                                                         <i class="fas fa-exclamation-triangle me-1 text-primary"></i>Priority Level
@@ -450,7 +462,7 @@
                                                     </select>
                                                 </div>
                                                 <div class="d-grid">
-                                                    <button type="submit" name="send_notification" class="btn btn-primary btn-lg fw-semibold shadow-sm">
+                                                    <button type="submit" name="send_notification" value="1" class="btn btn-primary btn-lg fw-semibold shadow-sm">
                                                         <i class="fas fa-rocket me-2"></i>Send Notification
                                                         <i class="fas fa-paper-plane ms-2"></i>
                                                     </button>
@@ -706,29 +718,64 @@
                     <div class="tab-pane fade" id="notifications-panel" role="tabpanel">
                         {% if sent_notifications %}
                             <div class="row">
-                                {% for notification in sent_notifications %}
+                                {% for item in sent_notifications %}
                                 <div class="col-lg-6 mb-3">
                                     <div class="card h-100 border-start border-4 
-                                         {% if not notification.is_read %}border-primary
-                                         {% else %}border-success{% endif %}">
+                                         {% if item.read_count == item.target_count %}border-success
+                                         {% elif item.read_count > 0 %}border-warning
+                                         {% else %}border-primary{% endif %}">
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <h6 class="card-title mb-0">{{ notification.title }}</h6>
-                                                <span class="badge {% if not notification.is_read %}bg-primary{% else %}bg-success{% endif %}">
-                                                    {% if not notification.is_read %}Unread{% else %}Read{% endif %}
+                                                <h6 class="card-title mb-0">{{ item.notification.title }}</h6>
+                                                <span class="badge {% if item.read_count == item.target_count %}bg-success{% elif item.read_count > 0 %}bg-warning{% else %}bg-primary{% endif %}">
+                                                    {{ item.read_count }}/{{ item.target_count }} Read
                                                 </span>
                                             </div>
-                                            <p class="card-text small text-muted mb-2">{{ notification.message|truncatewords:20 }}</p>
-                                            {% if notification.product %}
+                                            <p class="card-text small text-muted mb-2">{{ item.notification.message|truncatewords:20 }}</p>
+                                            
+                                            <!-- Target Info -->
+                                            <div class="small mb-2">
+                                                <i class="fas fa-user-tag me-1 text-info"></i>
+                                                <strong>Sent to:</strong> {{ item.target_display }}
+                                            </div>
+                                            
+                                            {% if item.notification.product %}
                                             <div class="small text-info mb-2">
-                                                <i class="fas fa-box me-1"></i>{{ notification.product.name }}
+                                                <i class="fas fa-box me-1"></i>{{ item.notification.product.name }}
                                             </div>
                                             {% endif %}
+                                            
+                                            <!-- Read Status Progress Bar -->
+                                            <div class="mb-2">
+                                                <div class="progress" style="height: 8px;">
+                                                    <div class="progress-bar {% if item.read_percentage == 100 %}bg-success{% elif item.read_percentage > 0 %}bg-warning{% else %}bg-primary{% endif %}" 
+                                                         role="progressbar" 
+                                                         style="width: {{ item.read_percentage }}%"
+                                                         aria-valuenow="{{ item.read_percentage }}" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">{{ item.read_percentage|floatformat:0 }}% read</small>
+                                            </div>
+                                            
+                                            <!-- Read By Users -->
+                                            {% if item.read_by_users %}
+                                            <div class="small mb-2">
+                                                <i class="fas fa-check-circle me-1 text-success"></i>
+                                                <strong>Read by:</strong>
+                                                <div class="ms-3 mt-1">
+                                                    {% for user in item.read_by_users %}
+                                                    <span class="badge bg-success me-1 mb-1">
+                                                        <i class="fas fa-user me-1"></i>{{ user.userprofile.display_name }}
+                                                    </span>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                            
                                             <div class="small text-muted">
-                                                <i class="fas fa-clock me-1"></i>Sent: {% timezone "Asia/Kolkata" %}{{ notification.created_at|date:"M d, H:i" }}{% endtimezone %}
-                                                {% if notification.is_read %}
-                                                    <br><i class="fas fa-check me-1"></i>Read: {% timezone "Asia/Kolkata" %}{{ notification.updated_at|date:"M d, H:i" }}{% endtimezone %}
-                                                {% endif %}
+                                                <i class="fas fa-clock me-1"></i>Sent: {% timezone "Asia/Kolkata" %}{{ item.notification.created_at|date:"M d, H:i" }}{% endtimezone %}
                                             </div>
                                         </div>
                                     </div>

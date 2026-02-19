@@ -1,4 +1,5 @@
-/* Smart Inventory System Custom Styles */
+/* Smart Inventory System Custom Styles - v2.0 - Updated Layout */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 :root {
     --primary-color: #0d6efd;
@@ -8,9 +9,418 @@
     --info-color: #0dcaf0;
 }
 
-/* General Styles */
+/* ========== ANIMATED LOGIN/SIGNUP STYLES ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
 body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #081b29;
+    font-family: 'Poppins', sans-serif;
+}
+
+.wrapper {
+    position: relative;
+    width: 900px;
+    height: 650px;
+    background: transparent;
+    border: 2px solid #0ef;
+    box-shadow: 0 0 25px #0ef;
+    overflow: hidden;
+}
+
+.wrapper .form-box {
+    position: absolute;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 10;
+}
+
+/* Login state - narrower form, wider info text */
+.wrapper .form-box.login {
+    width: 45%;
+}
+
+/* Signup state - keep 50/50 split */
+.wrapper.active .form-box.register {
+    width: 50%;
+}
+
+/* Logo Section in Forms */
+.form-box .logo-section {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.form-box .brain-container {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 10px;
+}
+
+.form-box .brain-svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 5px 15px rgba(0, 239, 255, 0.5));
+    animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.8; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+}
+
+.form-box .brand-name {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.form-box .neuro-text {
+    color: #0ef;
+}
+
+.form-box .stock-text {
+    color: #fff;
+}
+
+/* LOGIN FORM POSITION */
+.wrapper .form-box.login {
+    left: 0;
+    padding: 0 50px 20px 40px;
+}
+
+/* REGISTER FORM POSITION (Hidden Initially) */
+.wrapper .form-box.register {
+    right: 0;
+    padding: 0 40px 20px 50px;
+    pointer-events: none;
+    transform: translateX(120%);
+    filter: blur(10px);
+    transition: .7s ease;
+    overflow-y: auto;
+}
+
+/* ANIMATION: When switching to Register */
+.wrapper.active .form-box.register {
+    pointer-events: auto;
+    transform: translateX(0);
+    filter: blur(0);
+    transition-delay: .5s;
+}
+
+.wrapper.active .form-box.login {
+    transform: translateX(-120%);
+    filter: blur(10px);
+    transition-delay: 0s;
+    pointer-events: none;
+}
+
+/* BACKGROUND ANIMATIONS */
+.wrapper .bg-animate {
+    position: absolute;
+    top: -4px;
+    right: 0;
+    width: 900px;
+    height: 650px;
+    background: linear-gradient(45deg, #081b29, #0ef);
+    border-bottom: 3px solid #0ef;
+    transform: rotate(10deg) skewY(40deg);
+    transform-origin: bottom right;
+    transition: 1.5s ease;
+    z-index: 1;
+}
+
+.wrapper.active .bg-animate {
+    transform: rotate(0) skewY(0);
+    transition-delay: .5s;
+}
+
+.wrapper .bg-animate2 {
+    position: absolute;
+    top: 100%;
+    left: 250px;
+    width: 900px;
+    height: 750px;
+    background: #081b29;
+    border-top: 3px solid #0ef;
+    transform: rotate(0) skewY(0);
+    transform-origin: bottom left;
+    transition: 1.5s ease;
+    z-index: 1;
+}
+
+/* Move diagonal line left only on login page */
+.wrapper:not(.active) .bg-animate2 {
+    left: 150px;
+}
+
+.wrapper.active .bg-animate2 {
+    transform: rotate(-11deg) skewY(-41deg);
+    transition-delay: .5s;
+}
+
+/* INFO TEXT (Welcome Back) */
+.info-text {
+    position: absolute;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: #fff;
+    z-index: 2;
+}
+
+.info-text.login {
+    right: 0;
+    width: 55%;
+    text-align: right;
+    padding: 0 40px 60px 150px;
+    pointer-events: none;
+}
+
+.info-text.register {
+    left: 0;
+    width: 50%;
+    text-align: left;
+    padding: 0 150px 60px 40px;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.wrapper.active .info-text.login {
+    opacity: 0;
+    transition: .5s;
+}
+
+.wrapper.active .info-text.register {
+    opacity: 1;
+    transition: .5s;
+    transition-delay: .7s;
+}
+
+/* FORM STYLES */
+h2 {
+    font-size: 32px;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.input-box {
+    position: relative;
+    width: 100%;
+    height: 50px;
+    margin: 18px 0;
+    border-bottom: 2px solid #fff;
+}
+
+.input-box input,
+.input-box select {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    color: #fff;
+    font-weight: 500;
+    padding-right: 28px;
+}
+
+.input-box select {
+    cursor: pointer;
+    padding-right: 28px;
+}
+
+.input-box select option {
+    background: #081b29;
+    color: #fff;
+}
+
+.input-box label {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: #fff;
+    pointer-events: none;
+    transition: .5s;
+}
+
+.input-box label.select-label {
+    top: -5px;
+    font-size: 13px;
+}
+
+.input-box input:focus ~ label,
+.input-box input:valid ~ label,
+.input-box select:focus ~ label,
+.input-box select:valid ~ label {
+    top: -5px;
+    font-size: 13px;
+}
+
+.input-box i {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #fff;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    margin: 15px 0;
+    color: #fff;
+    font-size: 14px;
+}
+
+.remember-me input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.remember-me label {
+    cursor: pointer;
+}
+
+.btn {
+    width: 100%;
+    height: 45px;
+    background: #0ef;
+    border: none;
+    border-radius: 40px;
+    cursor: pointer;
+    box-shadow: 0 0 10px #0ef;
+    font-size: 16px;
+    color: #081b29;
+    font-weight: 600;
+    transition: .3s;
+}
+
+.btn:hover {
+    box-shadow: 0 0 20px #0ef;
+    transform: translateY(-2px);
+}
+
+.logreg-link {
+    font-size: 14px;
+    color: #fff;
+    text-align: center;
+    margin: 20px 0 10px;
+}
+
+.logreg-link p a {
+    color: #0ef;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.logreg-link p a:hover {
+    text-decoration: underline;
+}
+
+.alert-message {
+    background: rgba(220, 53, 69, 0.9);
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* ANIMATIONS */
+.wrapper .form-box .animation {
+    opacity: 0;
+    transform: translateX(-100%);
+    filter: blur(10px);
+    transition: .7s ease;
+    transition-delay: calc(.1s * var(--i));
+}
+
+.wrapper.active .form-box .animation {
+    transform: translateX(120%);
+    filter: blur(10px);
+    transition-delay: calc(.1s * var(--j));
+}
+
+.wrapper .form-box.login .animation,
+.wrapper.active .form-box.register .animation {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0);
+}
+
+.info-text .animation {
+    opacity: 0;
+    transform: translateX(100%);
+    filter: blur(10px);
+    transition: .7s ease;
+    transition-delay: calc(.1s * var(--i));
+}
+
+.info-text.login .animation,
+.wrapper.active .info-text.register .animation {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0);
+}
+
+.wrapper.active .info-text.login .animation {
+    opacity: 0;
+    transform: translateX(-120%);
+    filter: blur(10px);
+    transition-delay: calc(.1s * var(--j));
+}
+
+/* Responsive Design for Login/Signup */
+@media (max-width: 768px) {
+    .wrapper {
+        width: 100%;
+        height: 100vh;
+    }
+    
+    .wrapper .form-box {
+        width: 100%;
+        padding: 0 30px !important;
+    }
+    
+    .info-text {
+        display: none;
+    }
+    
+    .wrapper .bg-animate,
+    .wrapper .bg-animate2 {
+        display: none;
+    }
+}
+
+/* ========== END ANIMATED LOGIN/SIGNUP STYLES ========== */
+
+/* General Styles for Dashboard */
+body.dashboard {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f8f9fa;
+    display: block;
+    min-height: auto;
 }
 
 .navbar-brand {

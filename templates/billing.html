@@ -751,7 +751,8 @@ function viewBillDetails(billId) {
     `;
     
     document.body.insertAdjacentHTML('beforeend', loadingModal);
-    const loadingModalInstance = new bootstrap.Modal(document.getElementById('loadingModal'));
+    const loadingModalEl = document.getElementById('loadingModal');
+    const loadingModalInstance = new bootstrap.Modal(loadingModalEl);
     loadingModalInstance.show();
     
     fetch(`/bill-details/${billId}/`)
@@ -765,9 +766,13 @@ function viewBillDetails(billId) {
         .then(data => {
             console.log('Bill data received:', data);
             
-            // Close loading modal
+            // Properly close and remove loading modal
             loadingModalInstance.hide();
-            document.getElementById('loadingModal').remove();
+            setTimeout(() => {
+                loadingModalEl.remove();
+                // Remove any leftover backdrops
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+            }, 300);
             
             let itemsHtml = '';
             if (data.items && data.items.length > 0) {
@@ -841,49 +846,54 @@ function viewBillDetails(billId) {
                 existingModal.remove();
             }
             
-            // Add new modal
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
-            // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('billModal'));
-            modal.show();
+            // Add new modal after a short delay to ensure loading modal is gone
+            setTimeout(() => {
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('billModal'));
+                modal.show();
+            }, 350);
         })
         .catch(error => {
             console.error('Error fetching bill details:', error);
             
-            // Close loading modal
-            const loadingModalEl = document.getElementById('loadingModal');
-            if (loadingModalEl) {
-                loadingModalInstance.hide();
+            // Properly close and remove loading modal
+            loadingModalInstance.hide();
+            setTimeout(() => {
                 loadingModalEl.remove();
-            }
+                // Remove any leftover backdrops
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+            }, 300);
             
-            // Show error modal
-            const errorModal = `
-                <div class="modal fade" id="errorModal" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header bg-danger text-white">
-                                <h5 class="modal-title">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>Error
-                                </h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <p><i class="fas fa-times-circle text-danger me-2"></i>Failed to load bill details.</p>
-                                <p class="text-muted">Error: ${error.message}</p>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            // Show error modal after loading modal is removed
+            setTimeout(() => {
+                const errorModal = `
+                    <div class="modal fade" id="errorModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-danger text-white">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>Error
+                                    </h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p><i class="fas fa-times-circle text-danger me-2"></i>Failed to load bill details.</p>
+                                    <p class="text-muted">Error: ${error.message}</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
-            
-            document.body.insertAdjacentHTML('beforeend', errorModal);
-            const errorModalInstance = new bootstrap.Modal(document.getElementById('errorModal'));
-            errorModalInstance.show();
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', errorModal);
+                const errorModalInstance = new bootstrap.Modal(document.getElementById('errorModal'));
+                errorModalInstance.show();
+            }, 350);
         });
 }
 

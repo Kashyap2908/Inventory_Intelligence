@@ -37,10 +37,11 @@ class SalesBillItemAdmin(admin.ModelAdmin):
 
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = ['title', 'notification_type', 'priority', 'target_user_role', 'product', 'is_read', 'created_at']
+    list_display = ['title', 'notification_type', 'priority', 'target_user_role', 'target_user', 'product', 'is_read', 'created_at']
     list_filter = ['notification_type', 'priority', 'target_user_role', 'is_read', 'created_at']
     search_fields = ['title', 'message']
-    readonly_fields = ['created_at']
+    readonly_fields = ['created_at', 'updated_at']
+    filter_horizontal = ['read_by']  # Better UI for many-to-many field
     
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related('product')
+        return super().get_queryset(request).select_related('product', 'target_user').prefetch_related('read_by')

@@ -10,7 +10,7 @@ class Command(BaseCommand):
             {
                 'username': 'admin',
                 'email': 'admin@neurostock.com',
-                'password': 'admin123',
+                'password': 'Kp@1234',
                 'first_name': 'Admin',
                 'last_name': 'User',
                 'role': 'admin'
@@ -18,7 +18,7 @@ class Command(BaseCommand):
             {
                 'username': 'inventory',
                 'email': 'inventory@neurostock.com',
-                'password': 'admin123',
+                'password': 'Kp@1234',
                 'first_name': 'Inventory',
                 'last_name': 'Manager',
                 'role': 'inventory'
@@ -26,7 +26,7 @@ class Command(BaseCommand):
             {
                 'username': 'marketing',
                 'email': 'marketing@neurostock.com',
-                'password': 'admin123',
+                'password': 'Kp@1234',
                 'first_name': 'Marketing',
                 'last_name': 'Analyst',
                 'role': 'marketing'
@@ -77,7 +77,7 @@ class Command(BaseCommand):
             self.style.SUCCESS('\n🎯 Demo accounts setup complete!')
         )
         self.stdout.write('📧 You can now login with:')
-        self.stdout.write('   • admin@neurostock.com / admin123 (Admin)')
-        self.stdout.write('   • inventory@neurostock.com / admin123 (Inventory Manager)')
-        self.stdout.write('   • marketing@neurostock.com / admin123 (Marketing Analyst)')
+        self.stdout.write('   • admin@neurostock.com / Kp@1234 (Admin)')
+        self.stdout.write('   • inventory@neurostock.com / Kp@1234 (Inventory Manager)')
+        self.stdout.write('   • marketing@neurostock.com / Kp@1234 (Marketing Analyst)')
         self.stdout.write('   • Or create new accounts by entering any email!')

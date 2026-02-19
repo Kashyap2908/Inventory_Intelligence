@@ -24,7 +24,7 @@ def test_ai_connection():
         import google.generativeai as genai
         from config import GOOGLE_API_KEY
         
-        if GOOGLE_API_KEY == "AIzaSyA-iOTJn6vAs1JHz22fobYTr9iPoqLh2-I" or not GOOGLE_API_KEY:
+        if GOOGLE_API_KEY == "AIzaSyCOmjL-PBXX86L7asaGdq1IZej8yKyK3Xc" or not GOOGLE_API_KEY:
             return False, "API key not configured"
         
         genai.configure(api_key=GOOGLE_API_KEY)
@@ -794,10 +794,10 @@ def trend_dashboard(request):
                 try:
                     from config import GOOGLE_API_KEY
                 except ImportError:
-                    GOOGLE_API_KEY = "AIzaSyA-iOTJn6vAs1JHz22fobYTr9iPoqLh2-I"
+                    GOOGLE_API_KEY = "AIzaSyCOmjL-PBXX86L7asaGdq1IZej8yKyK3Xc"
                 
                 # If valid API key, use AI analysis
-                if GOOGLE_API_KEY and GOOGLE_API_KEY != "AIzaSyA-iOTJn6vAs1JHz22fobYTr9iPoqLh2-I":
+                if GOOGLE_API_KEY and GOOGLE_API_KEY != "AIzaSyCOmjL-PBXX86L7asaGdq1IZej8yKyK3Xc":
                     print("🤖 Using Google Gemini AI for trend analysis")
                     genai.configure(api_key=GOOGLE_API_KEY)
                     model = genai.GenerativeModel('gemini-flash-latest')
@@ -1316,19 +1316,41 @@ def admin_dashboard(request):
     try:
         sent_notifications_queryset = Notification.objects.filter(
             notification_type='admin_message'
-        ).order_by('-created_at')
+        ).prefetch_related('read_by').order_by('-created_at')
     except Exception as e:
-        # Fallback if there are any database issues
         sent_notifications_queryset = Notification.objects.none()
-        print(f"DEBUG: Error querying notifications: {e}")
     
     # Count notification statistics (before slicing)
     total_sent = sent_notifications_queryset.count()
     unread_notifications = sent_notifications_queryset.filter(is_read=False).count()
     read_notifications = sent_notifications_queryset.filter(is_read=True).count()
     
-    # Now slice for display (limit to 20)
-    sent_notifications = sent_notifications_queryset[:20]
+    # Now slice for display (limit to 20) and add read status info
+    sent_notifications_list = []
+    for notification in sent_notifications_queryset[:20]:
+        # Get list of users who have read this notification
+        read_by_users = notification.read_by.all()
+        read_count = read_by_users.count()
+        
+        # Get target user count
+        if notification.target_user:
+            target_count = 1
+            target_display = notification.target_user.userprofile.display_name
+        else:
+            # Count all inventory users
+            target_count = UserProfile.objects.filter(role='inventory').count()
+            target_display = "All Inventory Managers"
+        
+        sent_notifications_list.append({
+            'notification': notification,
+            'read_by_users': read_by_users,
+            'read_count': read_count,
+            'target_count': target_count,
+            'target_display': target_display,
+            'read_percentage': (read_count / target_count * 100) if target_count > 0 else 0
+        })
+    
+    sent_notifications = sent_notifications_list
     
     if request.method == 'POST':
         print(f"🔧 DEBUG: Processing POST request...")
@@ -1379,9 +1401,6 @@ def admin_dashboard(request):
                 messages.error(request, '❌ No notification ID provided!')
         
         elif 'send_notification' in request.POST:
-            print("🔧 DEBUG: Send notification form submitted")
-            print(f"🔧 DEBUG: All POST data: {dict(request.POST)}")
-            
             # Get form data
             product_name = request.POST.get('product_name')
             product_category = request.POST.get('product_category')
@@ -1389,21 +1408,13 @@ def admin_dashboard(request):
             admin_recommendation = request.POST.get('admin_recommendation')
             notification_type = request.POST.get('notification_type', 'admin_message')
             priority = request.POST.get('notification_priority', 'medium')
-            
-            print(f"🔧 DEBUG: Extracted data:")
-            print(f"  - Product Name: '{product_name}'")
-            print(f"  - Product Category: '{product_category}'")
-            print(f"  - Title: '{title}'")
-            print(f"  - Recommendation: '{admin_recommendation}'")
-            print(f"  - Type: '{notification_type}'")
-            print(f"  - Priority: '{priority}'")
+            target_user_param = request.POST.get('target_user', 'all')
             
             # Check if all required fields are present
             required_fields = [product_name, product_category, title, admin_recommendation]
             missing_fields = [field for field in required_fields if not field or not field.strip()]
             
             if not missing_fields:
-                print("🔧 DEBUG: All required fields present, creating notification...")
                 try:
                     # Try to find the product in database
                     product = None
@@ -1411,16 +1422,12 @@ def admin_dashboard(request):
                     trend_score = 0.0
                     
                     try:
-                        # Look for exact or partial match
                         product = Product.objects.filter(name__icontains=product_name).first()
                         if product:
                             current_stock = product.total_stock
                             trend_score = product.trend_score
-                            print(f"🔧 DEBUG: Found matching product: {product.name}")
-                        else:
-                            print(f"🔧 DEBUG: No matching product found for: {product_name}")
-                    except Exception as e:
-                        print(f"🔧 DEBUG: Error finding product: {e}")
+                    except Exception:
+                        pass
                     
                     # Get current time
                     current_time = timezone.now()
@@ -1441,52 +1448,41 @@ Notification Details:
 • Sent: {formatted_time}
 • From: Admin ({request.user.username})"""
                     
-                    print(f"🔧 DEBUG: Creating notification with:")
-                    print(f"  - Title: '{title}'")
-                    print(f"  - Target Role: 'inventory'")
-                    print(f"  - Type: '{notification_type}'")
-                    print(f"  - Priority: '{priority}'")
-                    print(f"  - Product: {product}")
+                    # Determine target user
+                    target_user_obj = None
+                    target_role = 'inventory'
                     
-                    # Create notification for inventory team
+                    if target_user_param != 'all':
+                        try:
+                            target_user_obj = User.objects.get(id=int(target_user_param))
+                        except (User.DoesNotExist, ValueError):
+                            messages.error(request, '❌ Target user not found!')
+                            return redirect('admin_dashboard')
+                    
+                    # Create notification
                     notification = Notification.objects.create(
                         title=f"{title}",
                         message=detailed_message,
                         notification_type=notification_type,
                         priority=priority,
-                        target_user_role='inventory',
+                        target_user_role=target_role,
+                        target_user=target_user_obj,
                         product=product,
                         is_read=False
                     )
                     
-                    print(f"🔧 DEBUG: Notification created successfully!")
-                    print(f"  - ID: {notification.id}")
-                    print(f"  - Title: {notification.title}")
-                    print(f"  - Target Role: {notification.target_user_role}")
-                    print(f"  - Is Read: {notification.is_read}")
-                    print(f"  - Created At: {notification.created_at}")
-                    
-                    # Verify it can be found in inventory query
-                    inventory_check = Notification.objects.filter(
-                        target_user_role__in=['inventory', 'all'],
-                        is_read=False,
-                        id=notification.id
-                    ).exists()
-                    print(f"🔧 DEBUG: Notification found in inventory query: {inventory_check}")
-                    
-                    success_message = f'✅ Detailed notification sent to inventory team!'
+                    # Success message
+                    if target_user_obj:
+                        success_message = f'✅ Notification sent to {target_user_obj.userprofile.display_name}!'
+                    else:
+                        success_message = f'✅ Notification sent to all inventory managers!'
                     
                     messages.success(request, success_message)
-                    print(f"🔧 DEBUG: Success message added, redirecting...")
                     return redirect('admin_dashboard')
                     
                 except Exception as e:
-                    print(f"🔧 DEBUG: Error creating notification: {e}")
-                    import traceback
-                    traceback.print_exc()
                     messages.error(request, f'❌ Error sending notification: {str(e)}')
             else:
-                print(f"🔧 DEBUG: Missing required fields: {missing_fields}")
                 messages.error(request, '⚠️ Please fill in all required fields: Product Name, Category, Title, and Recommendation.')
         
         elif 'approve_product_request' in request.POST:
@@ -1726,6 +1722,7 @@ Notification Details:
         # Team Management Data
         'inventory_users': team_data,
         'active_inventory_users': active_inventory_users,
+        'inventory_users_for_dropdown': [profile.user for profile in inventory_users_queryset],  # For notification dropdown
         
         # Product Requests from Inventory
         'product_requests': product_requests,
@@ -2595,12 +2592,20 @@ def search_products_api(request):
 
 @login_required
 def mark_notification_read(request, notification_id):
-    """Mark a notification as read"""
+    """Mark a notification as read by adding user to read_by"""
     try:
         notification = Notification.objects.get(id=notification_id)
-        notification.is_read = True
+        # Add user to read_by many-to-many field
+        notification.read_by.add(request.user)
+        
+        # Only set is_read to True if this is a single-user notification
+        # For broadcast notifications, keep is_read as False until all users read it
+        if notification.target_user:
+            notification.is_read = True
+        
         notification.updated_at = timezone.now()
         notification.save(update_fields=['is_read', 'updated_at'])
+        
         return JsonResponse({'success': True})
     except Notification.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Notification not found'})

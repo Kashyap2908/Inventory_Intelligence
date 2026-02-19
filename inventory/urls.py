@@ -20,6 +20,7 @@ urlpatterns = [
     path('update-order/<int:order_id>/', views.update_order_status, name='update_order_status'),
     path('acknowledge-order/', views.acknowledge_order_message, name='acknowledge_order_message'),
     path('update-order-from-notification/', views.update_order_from_notification, name='update_order_from_notification'),
+    path('mark-notification-read/<int:notification_id>/', views.mark_notification_read, name='mark_notification_read'),
     path('api/search-products/', views.search_products, name='search_products'),
     path('api/search-products-billing/', views.search_products_api, name='search_products_api'),  # New API for billing
     path('api/product-autocomplete/', views.product_autocomplete_api, name='product_autocomplete_api'),  # New API for notification autocomplete
