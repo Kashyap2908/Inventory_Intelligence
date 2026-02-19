@@ -375,12 +375,12 @@
                                                         <i class="fas fa-dollar-sign me-1"></i>
                                                         <strong>Raise Price:</strong> High demand with good stock levels
                                                     </div>
-                                                {% elif product.trend_score < 3 and product.total_stock > 150 %}
+                                                {% elif product.trend_score < 4 and product.total_stock > 150 %}
                                                     <div class="alert alert-danger py-2">
                                                         <i class="fas fa-percentage me-1"></i>
                                                         <strong>Apply Discount:</strong> Low demand with overstock situation
                                                     </div>
-                                                {% elif product.trend_score < 3 %}
+                                                {% elif product.trend_score < 4 %}
                                                     <div class="alert alert-warning py-2">
                                                         <i class="fas fa-pause me-1"></i>
                                                         <strong>Reduce Orders:</strong> Low demand detected
@@ -391,18 +391,6 @@
                                                         <strong>Reorder Soon:</strong> Stock running low
                                                     </div>
                                                 {% endif %}
-                                            </div>
-                                            <div class="d-flex gap-2 mt-2">
-                                                <button class="btn btn-sm btn-outline-primary" 
-                                                        data-product-id="{{ product.id }}"
-                                                        onclick="viewProductDetails('{{ product.id }}', this)">
-                                                    <i class="fas fa-eye me-1"></i>Details
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-success" 
-                                                        data-product-id="{{ product.id }}"
-                                                        onclick="applyRecommendation('{{ product.id }}', this)">
-                                                    <i class="fas fa-check me-1"></i>Apply
-                                                </button>
                                             </div>
                                         </div>
                                     </div>

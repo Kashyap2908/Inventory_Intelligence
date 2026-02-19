@@ -1167,81 +1167,81 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Function to show full admin message
 function showFullMessage(notificationId) {
-    // Find the notification card
-    const notificationCard = document.querySelector(`[data-notification-id="${notificationId}"]`).closest('.card');
-    
-    if (!notificationCard) {
-        alert('Notification not found');
-        return;
-    }
-    
-    // Extract notification details
-    const title = notificationCard.querySelector('.card-title').textContent.trim();
-    const message = notificationCard.querySelector('.card-text').textContent.trim();
-    const priorityBadge = notificationCard.querySelector('.badge');
-    const priority = priorityBadge ? priorityBadge.textContent.trim() : 'Medium';
-    const productInfo = notificationCard.querySelector('.text-info');
-    const product = productInfo ? productInfo.textContent.trim() : 'N/A';
-    const timeInfo = notificationCard.querySelector('.text-muted');
-    const time = timeInfo ? timeInfo.textContent.trim() : '';
-    
-    // Create modal HTML
-    const modalHTML = `
-        <div class="modal fade" id="notificationModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">
-                            <i class="fas fa-bell me-2"></i>${title}
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <span class="badge bg-${priority === 'URGENT' ? 'danger' : priority === 'HIGH' ? 'warning' : priority === 'MEDIUM' ? 'info' : 'secondary'} mb-2">
-                                ${priority}
-                            </span>
+    // Fetch full notification details via AJAX
+    fetch(`/api/notification/${notificationId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                alert('Error loading notification details');
+                return;
+            }
+            
+            const notification = data.notification;
+            
+            // Create modal HTML with full message
+            const modalHTML = `
+                <div class="modal fade" id="notificationModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-bell me-2"></i>${notification.title}
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <span class="badge bg-${notification.priority === 'urgent' ? 'danger' : notification.priority === 'high' ? 'warning' : notification.priority === 'medium' ? 'info' : 'secondary'} mb-2">
+                                        ${notification.priority.toUpperCase()}
+                                    </span>
+                                </div>
+                                <div class="mb-3">
+                                    <h6 class="text-muted">Message:</h6>
+                                    <div class="p-3 bg-light rounded" style="white-space: pre-wrap;">${notification.message}</div>
+                                </div>
+                                ${notification.product ? `
+                                <div class="mb-3">
+                                    <h6 class="text-muted">Product:</h6>
+                                    <p class="mb-0"><i class="fas fa-box me-1"></i>${notification.product}</p>
+                                </div>
+                                ` : ''}
+                                <div class="text-muted small">
+                                    <i class="fas fa-clock me-1"></i>${notification.created_at}
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-success" onclick="acknowledgeFromModal('${notificationId}')">
+                                    <i class="fas fa-check me-1"></i>Acknowledge
+                                </button>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <h6 class="text-muted">Message:</h6>
-                            <div class="p-3 bg-light rounded" style="white-space: pre-wrap;">${message}</div>
-                        </div>
-                        <div class="mb-3">
-                            <h6 class="text-muted">Product:</h6>
-                            <p class="mb-0">${product}</p>
-                        </div>
-                        <div class="text-muted small">
-                            <i class="fas fa-clock me-1"></i>${time}
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-success" onclick="acknowledgeFromModal('${notificationId}')">
-                            <i class="fas fa-check me-1"></i>Acknowledge
-                        </button>
                     </div>
                 </div>
-            </div>
-        </div>
-    `;
-    
-    // Remove existing modal if any
-    const existingModal = document.getElementById('notificationModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-    
-    // Add modal to body
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
-    modal.show();
-    
-    // Clean up modal after it's hidden
-    document.getElementById('notificationModal').addEventListener('hidden.bs.modal', function() {
-        this.remove();
-    });
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('notificationModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
+            modal.show();
+            
+            // Clean up modal after it's hidden
+            document.getElementById('notificationModal').addEventListener('hidden.bs.modal', function() {
+                this.remove();
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading notification details');
+        });
 }
 
 function acknowledgeFromModal(notificationId) {

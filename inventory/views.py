@@ -2611,6 +2611,32 @@ def mark_notification_read(request, notification_id):
         return JsonResponse({'success': False, 'error': 'Notification not found'})
 
 @login_required
+def get_notification_details(request, notification_id):
+    """Get full notification details for modal display"""
+    try:
+        notification = Notification.objects.get(id=notification_id)
+        
+        # Format the created_at timestamp
+        from django.utils import timezone as tz
+        created_at_str = notification.created_at.astimezone(tz.get_current_timezone()).strftime('%B %d, %Y at %I:%M %p')
+        
+        data = {
+            'success': True,
+            'notification': {
+                'id': notification.id,
+                'title': notification.title,
+                'message': notification.message,
+                'priority': notification.priority,
+                'notification_type': notification.notification_type,
+                'product': notification.product.name if notification.product else None,
+                'created_at': created_at_str,
+            }
+        }
+        return JsonResponse(data)
+    except Notification.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Notification not found'})
+
+@login_required
 def search_products(request):
     """AJAX endpoint for product autocomplete search"""
     query = request.GET.get('q', '').strip()
