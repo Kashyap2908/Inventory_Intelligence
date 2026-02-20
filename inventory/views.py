@@ -24,7 +24,7 @@ def test_ai_connection():
         import google.generativeai as genai
         from config import GOOGLE_API_KEY
         
-        if GOOGLE_API_KEY == "AIzaSyCOmjL-PBXX86L7asaGdq1IZej8yKyK3Xc" or not GOOGLE_API_KEY:
+        if GOOGLE_API_KEY == "AIzaSyBs2C3jTNATRnRCahH8CC_enMC7jMeoMOA" or not GOOGLE_API_KEY:
             return False, "API key not configured"
         
         genai.configure(api_key=GOOGLE_API_KEY)
@@ -794,10 +794,10 @@ def trend_dashboard(request):
                 try:
                     from config import GOOGLE_API_KEY
                 except ImportError:
-                    GOOGLE_API_KEY = "AIzaSyCOmjL-PBXX86L7asaGdq1IZej8yKyK3Xc"
+                    GOOGLE_API_KEY = "AIzaSyBs2C3jTNATRnRCahH8CC_enMC7jMeoMOA"
                 
                 # If valid API key, use AI analysis
-                if GOOGLE_API_KEY and GOOGLE_API_KEY != "AIzaSyCOmjL-PBXX86L7asaGdq1IZej8yKyK3Xc":
+                if GOOGLE_API_KEY and GOOGLE_API_KEY != "AIzaSyBs2C3jTNATRnRCahH8CC_enMC7jMeoMOA":
                     print("🤖 Using Google Gemini AI for trend analysis")
                     genai.configure(api_key=GOOGLE_API_KEY)
                     model = genai.GenerativeModel('gemini-flash-latest')

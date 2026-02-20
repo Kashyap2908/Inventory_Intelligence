@@ -62,15 +62,20 @@ smart_inventory/
 - Trend-based recommendations (increase stock, apply discount, etc.)
 
 ### 4. Notification System
-- **Targeted notifications**: Admin can send to all inventory managers or specific users
+- **Targeted notifications**: Admin can send to all inventory managers or specific individual users
 - **Rich content**: Notifications include product details, recommendations, priority, and timestamps
 - **Real-time panel** with priority levels (low, medium, high, urgent)
+- **Full message modal**: Click "View Details" to see complete notification content in a modal dialog
+  - Displays full message (no truncation)
+  - Shows product information
+  - Priority badge with color coding
+  - Timestamp
+  - Acknowledge button
 - **Read tracking**: 
   - Per-user read status (each user has independent read/unread state)
   - Admin sees which specific users have read each notification
   - Progress bars showing read percentage (e.g., "2/3 Read - 67%")
   - Color-coded indicators (blue=unread, yellow=partial, green=all read)
-- **Full details modal**: Click "View Details" to see complete notification content
 - **Automatic notifications** for:
   - Low stock alerts (when stock < 10 units)
   - Expiry warnings (7 days, 3 days, expired)
@@ -289,10 +294,11 @@ Notification Details:
    - Displays truncated message preview
 3. **User views notification**
    - Clicks "View Details" button
-   - Modal opens with full content:
-     - Complete message (formatted)
+   - AJAX call fetches full notification details
+   - Modal opens with complete content:
+     - Full message (no truncation, preserves formatting)
      - Product details
-     - Priority level
+     - Priority level with color-coded badge
      - Timestamp
    - User clicks "Acknowledge" to mark as read
 4. **Notification moves to read section**
@@ -344,8 +350,10 @@ python manage.py create_demo_accounts
 - `/trends/` - Trend analysis dashboard
 - `/billing/` - Billing interface
 - `/mark-notification-read/<id>/` - Mark notification as read
+- `/api/notification/<id>/` - Get full notification details (AJAX)
 - `/api/search-products/` - Product search API
-- `/api/product-autocomplete/` - Product autocomplete
+- `/api/search-products-billing/` - Billing product search
+- `/api/product-autocomplete/` - Product autocomplete for forms
 
 ## Technology Stack
 
@@ -441,6 +449,23 @@ Notification.objects.filter(created_at__lt=old, is_read=True).delete()
 ## License
 
 Educational project - Free to use and modify
+
+## Recent Updates
+
+### Notification System Enhancements
+- ✅ Individual user targeting in notification dropdown
+- ✅ Full message display in modal (no truncation)
+- ✅ AJAX-based notification details fetching
+- ✅ Per-user read tracking with ManyToMany field
+- ✅ Admin read status dashboard with progress bars
+- ✅ Color-coded notification cards (blue/yellow/green)
+
+### System Improvements
+- ✅ Cleaned up debug statements
+- ✅ Removed unnecessary documentation files
+- ✅ Consolidated all docs into single README
+- ✅ Fixed trend score calculation with fallback
+- ✅ Enhanced error handling throughout
 
 ## Contributors
 
