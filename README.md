@@ -35,11 +35,8 @@ smart_inventory/
 ├── requirements.txt      # Python dependencies
 ├── db.sqlite3           # SQLite database
 └── Setup scripts:
-    ├── add_all_products.py
-    ├── setup_company_stock.py
-    ├── add_inventory_stock.py
-    ├── create_sample_bills.py
-    └── set_realistic_trend_scores.py
+    ├── add_all_products.py      # Creates product catalog
+    └── setup_company_stock.py   # Sets up company warehouse
 ```
 
 ## Features
