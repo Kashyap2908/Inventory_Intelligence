@@ -6,7 +6,6 @@ from datetime import date
 class UserProfile(models.Model):
     ROLE_CHOICES = [
         ('inventory', 'Inventory Manager'),
-        ('marketing', 'Marketing Manager'),
         ('admin', 'Admin'),
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)

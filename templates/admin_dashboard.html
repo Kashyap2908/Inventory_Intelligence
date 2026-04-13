@@ -108,36 +108,6 @@
 {% endblock %}
 
 {% block content %}
-<!-- Header with Quick Stats -->
-<!-- <div class="row mb-4">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h2 class="mb-1">Admin Dashboard</h2>
-                <p class="text-muted mb-0">Manage inventory, orders, and system operations</p>
-            </div>
-            <div class="d-flex gap-3">
-                <div class="text-center">
-                    <div class="badge bg-primary fs-6">{{ products|length }}</div>
-                    <small class="text-muted d-block">Total Products</small>
-                </div>
-                <div class="text-center">
-                    <div class="badge bg-success fs-6">{{ ordered_count }}</div>
-                    <small class="text-muted d-block">Orders Placed</small>
-                </div>
-                <div class="text-center">
-                    <div class="badge bg-warning fs-6">{{ pending_orders_count }}</div>
-                    <small class="text-muted d-block">Pending Orders</small>
-                </div>
-                <div class="text-center">
-                    <div class="badge bg-info fs-6">{{ completed_orders_count }}</div>
-                    <small class="text-muted d-block">Completed Orders</small>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
- -->
 <!-- Main Dashboard Tabs -->
 <div class="row">
     <div class="col-12">
@@ -164,11 +134,6 @@
                             <i class="fas fa-users me-2"></i>Team Management
                         </button>
                     </li>
-                    <!-- <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="inventory-stock-tab" data-bs-toggle="tab" data-bs-target="#inventory-stock-panel" type="button" role="tab">
-                            <i class="fas fa-warehouse me-2"></i>Inventory Stock Overview
-                        </button>
-                    </li> -->
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="statistics-tab" data-bs-toggle="tab" data-bs-target="#statistics-panel" type="button" role="tab">
                             <i class="fas fa-chart-bar me-2"></i>Statistics
@@ -278,14 +243,6 @@
                                                         onclick="setDiscountProduct(this.dataset.productId, this.dataset.productName)"
                                                         title="Apply Discount">
                                                     <i class="fas fa-percentage"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-primary" 
-                                                        data-product-name="{{ item.product.name }}"
-                                                        data-product-id="{{ item.product.id }}"
-                                                        data-current-stock="{{ item.product.total_stock }}"
-                                                        onclick="populateOrderModal(this.dataset.productName, this.dataset.productId, this.dataset.currentStock)"
-                                                        title="Create Order">
-                                                    <i class="fas fa-shopping-cart"></i>
                                                 </button>
                                             </div>
                                         </td>
@@ -748,15 +705,16 @@
                                             <!-- Read Status Progress Bar -->
                                             <div class="mb-2">
                                                 <div class="progress" style="height: 8px;">
-                                                    <div class="progress-bar {% if item.read_percentage == 100 %}bg-success{% elif item.read_percentage > 0 %}bg-warning{% else %}bg-primary{% endif %}" 
+                                                    {% widthratio item.read_count item.target_count 100 as read_percentage %}
+                                                    <div class="progress-bar {% if read_percentage == 100 %}bg-success{% elif read_percentage > 0 %}bg-warning{% else %}bg-primary{% endif %}" 
                                                          role="progressbar" 
-                                                         style="width: {{ item.read_percentage }}%"
-                                                         aria-valuenow="{{ item.read_percentage }}" 
+                                                         style="width: {{ read_percentage|default:0 }}%"
+                                                         aria-valuenow="{{ read_percentage|default:0 }}" 
                                                          aria-valuemin="0" 
                                                          aria-valuemax="100">
                                                     </div>
                                                 </div>
-                                                <small class="text-muted">{{ item.read_percentage|floatformat:0 }}% read</small>
+                                                <small class="text-muted">{{ read_percentage|default:0|floatformat:0 }}% read</small>
                                             </div>
                                             
                                             <!-- Read By Users -->
@@ -820,24 +778,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <!-- <div class="col-md-4 mb-3">
-                                <div class="card border-0 bg-gradient-success text-white">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-user-check fa-2x mb-2"></i>
-                                        <h4 class="mb-0">{{ active_inventory_users }}</h4>
-                                        <small>Active Members</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <div class="card border-0 bg-gradient-warning text-white">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-shield-alt fa-2x mb-2"></i>
-                                        <h4 class="mb-0">Admin</h4>
-                                        <small>Management Control</small>
-                                    </div>
-                                </div>
-                            </div> -->
                         </div>
 
                         <!-- Team Members List -->
@@ -944,130 +884,6 @@
                         </div>
                     </div>
 
-                    <!-- Inventory Stock Overview Panel -->
-                    <!-- <div class="tab-pane fade" id="inventory-stock-panel" role="tabpanel">
-                        <div class="row">
-                            <div class="col-12 mb-4">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h5 class="text-success fw-bold mb-0">
-                                            <i class="fas fa-warehouse me-2"></i>Inventory Stock Overview
-                                        </h5>
-                                        <p class="text-muted small mb-0">View stock levels across all inventory users</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div> -->
-
-                        <!-- Stock by Product -->
-                        <!-- <div class="row">
-                            {% for product in products %}
-                            <div class="col-lg-6 mb-4">
-                                <div class="card shadow-sm border-0 h-100">
-                                    <div class="card-header bg-gradient-success text-white">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <h6 class="mb-0 fw-bold">
-                                                    <i class="fas fa-box me-2"></i>{{ product.name }}
-                                                </h6>
-                                                <small class="opacity-75">{{ product.category }}</small>
-                                            </div>
-                                            <div class="badge bg-white text-success fw-bold">
-                                                Total: {{ product.total_stock }} units
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="card-body">
-                                        <h6 class="text-muted mb-3">
-                                            <i class="fas fa-users me-2"></i>Stock Distribution by Inventory User
-                                        </h6>
-                                        
-                                        {% with stock_by_user=product.get_all_users_stock %}
-                                            {% if stock_by_user %}
-                                                <div class="table-responsive">
-                                                    <table class="table table-sm table-hover mb-0">
-                                                        <thead class="table-light">
-                                                            <tr>
-                                                                <th><i class="fas fa-user me-1"></i>Inventory User</th>
-                                                                <th class="text-end"><i class="fas fa-boxes me-1"></i>Stock Quantity</th>
-                                                                <th class="text-end"><i class="fas fa-percentage me-1"></i>Share</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {% for user_stock in stock_by_user %}
-                                                            <tr>
-                                                                <td>
-                                                                    <div class="d-flex align-items-center">
-                                                                        <div class="avatar-circle-sm bg-success text-white me-2">
-                                                                            {% if user_stock.user__first_name %}
-                                                                                {{ user_stock.user__first_name|first|upper }}
-                                                                            {% elif user_stock.user__username %}
-                                                                                {{ user_stock.user__username|first|upper }}
-                                                                            {% else %}
-                                                                                U
-                                                                            {% endif %}
-                                                                        </div>
-                                                                        <span class="fw-semibold">
-                                                                            {% if user_stock.user__first_name %}
-                                                                                {{ user_stock.user__first_name }}
-                                                                            {% else %}
-                                                                                {{ user_stock.user__username|default:"Unknown User" }}
-                                                                            {% endif %}
-                                                                            {% if user_stock.user__last_name %} {{ user_stock.user__last_name }}{% endif %}
-                                                                        </span>
-                                                                    </div>
-                                                                </td>
-                                                                <td class="text-end">
-                                                                    <span class="badge bg-success">{{ user_stock.total }} units</span>
-                                                                </td>
-                                                                <td class="text-end">
-                                                                    {% widthratio user_stock.total product.total_stock 100 as percentage %}
-                                                                    <span class="text-muted">{{ percentage }}%</span>
-                                                                </td>
-                                                            </tr>
-                                                            {% endfor %}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            {% else %}
-                                                <div class="text-center py-3">
-                                                    <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
-                                                    <p class="text-muted small mb-0">No stock available for this product</p>
-                                                </div>
-                                            {% endif %}
-                                        {% endwith %}
-                                        
-                                        <div class="mt-3 pt-3 border-top">
-                                            <div class="row text-center">
-                                                <div class="col-4">
-                                                    <small class="text-muted d-block">Cost Price</small>
-                                                    <strong class="text-primary">₹{{ product.cost_price }}</strong>
-                                                </div>
-                                                <div class="col-4">
-                                                    <small class="text-muted d-block">Selling Price</small>
-                                                    <strong class="text-success">₹{{ product.selling_price }}</strong>
-                                                </div>
-                                                <div class="col-4">
-                                                    <small class="text-muted d-block">Total Value</small>
-                                                    <strong class="text-info">₹{% widthratio product.total_stock 1 product.selling_price %}</strong>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% empty %}
-                            <div class="col-12">
-                                <div class="text-center py-5">
-                                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
-                                    <h5 class="text-muted">No Products Found</h5>
-                                    <p class="text-muted">Products will appear here once added to the system.</p>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div> -->
-
                     <!-- Statistics Panel -->
                     <div class="tab-pane fade" id="statistics-panel" role="tabpanel">
                         <div class="row">
@@ -1104,12 +920,6 @@
                                         <h3 class="text-info">{{ completed_orders_count }}</h3>
                                         <h6 class="text-muted">Completed Orders</h6>
                                         <p class="small text-muted mb-0">Orders approved by admin</p>
-                                        <!-- <div class="mt-2">
-                                            <small class="text-info">
-                                                <i class="fas fa-eye me-1"></i>{{ admin_seen_count }} Admin Actions<br>
-                                                <i class="fas fa-box me-1"></i>{{ actual_received_count }} Stock Received
-                                            </small>
-                                        </div> -->
                                     </div>
                                 </div>
                             </div>
@@ -1303,48 +1113,6 @@
     </div>
 </div>
 
-<!-- Order Modal -->
-<div class="modal fade" id="orderModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-shopping-cart me-2"></i>Create Order Request
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="post" action="{% url 'create_order' %}" id="orderForm">
-                <div class="modal-body">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="orderProductName" class="form-label">Product Name</label>
-                        <input type="text" class="form-control" id="orderProductName" name="product" readonly>
-                        <input type="hidden" id="orderProductId" name="product_id">
-                        <div class="mt-2">
-                            <small class="text-muted">Current Stock: <span id="orderCurrentStock" class="fw-bold">-</span> units</small>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="orderQuantity" class="form-label">Quantity to Order</label>
-                        <input type="number" class="form-control" id="orderQuantity" name="quantity" min="1" required>
-                        <div class="form-text">Enter the quantity you want to order from supplier</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="orderNotes" class="form-label">Order Notes (Optional)</label>
-                        <textarea class="form-control" id="orderNotes" name="order_notes" rows="2" placeholder="Any special instructions or notes..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane me-1"></i>Send Order Request to Inventory
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <!-- Bill Details Modal -->
 <div class="modal fade" id="billDetailsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -1396,63 +1164,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize notification form enhancements
     initializeNotificationForm();
     
-    // Initialize order form handling
-    initializeOrderForm();
-    
     console.log('✅ Admin dashboard initialization complete');
 });
-
-function initializeOrderForm() {
-    console.log('📋 Initializing order form...');
-    
-    const orderForm = document.getElementById('orderForm');
-    if (!orderForm) {
-        console.error('❌ Order form not found');
-        return;
-    }
-    
-    orderForm.addEventListener('submit', function(e) {
-        console.log('📤 Order form submitted');
-        
-        const productName = document.getElementById('orderProductName').value.trim();
-        const quantity = document.getElementById('orderQuantity').value.trim();
-        
-        console.log('📋 Form data:');
-        console.log('   - Product:', productName);
-        console.log('   - Quantity:', quantity);
-        
-        if (!productName) {
-            e.preventDefault();
-            alert('Error: Product name is missing. Please try again.');
-            return false;
-        }
-        
-        if (!quantity || parseInt(quantity) < 1) {
-            e.preventDefault();
-            alert('Error: Please enter a valid quantity (minimum 1).');
-            document.getElementById('orderQuantity').focus();
-            return false;
-        }
-        
-        // Show loading state
-        const submitBtn = this.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creating Order...';
-        submitBtn.disabled = true;
-        
-        console.log('✅ Form validation passed, submitting...');
-        
-        // Re-enable button after delay (in case of errors)
-        setTimeout(() => {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-        }, 10000);
-        
-        return true;
-    });
-    
-    console.log('✅ Order form initialized');
-}
 
 function initializeNotificationForm() {
     const productNameInput = document.getElementById('product_name');
@@ -1609,87 +1322,6 @@ function setDiscountProduct(productId, productName) {
     const actionsTab = document.getElementById('actions-orders-tab');
     if (actionsTab) {
         actionsTab.click();
-    }
-}
-
-function populateOrderModal(productName, productId, currentStock) {
-    console.log('� DEBUG: populateOrderModal function called');
-    console.log('📦 Parameters received:');
-    console.log('   - Product Name:', productName);
-    console.log('   - Product ID:', productId);
-    console.log('   - Current Stock:', currentStock);
-    
-    // Check if modal exists
-    const modal = document.getElementById('orderModal');
-    if (!modal) {
-        console.error('❌ Order modal not found!');
-        alert('Error: Order modal not found. Please refresh the page.');
-        return;
-    }
-    
-    // Populate product name field
-    const productNameField = document.getElementById('orderProductName');
-    if (productNameField) {
-        productNameField.value = productName;
-        console.log('✅ Product name field populated:', productName);
-    } else {
-        console.error('❌ Product name field not found');
-    }
-    
-    // Populate hidden product ID field
-    const productIdField = document.getElementById('orderProductId');
-    if (productIdField) {
-        productIdField.value = productId;
-        console.log('✅ Product ID field populated:', productId);
-    } else {
-        console.error('❌ Product ID field not found');
-    }
-    
-    // Populate current stock display
-    const currentStockSpan = document.getElementById('orderCurrentStock');
-    if (currentStockSpan) {
-        currentStockSpan.textContent = currentStock;
-        console.log('✅ Current stock display populated:', currentStock);
-    } else {
-        console.error('❌ Current stock span not found');
-    }
-    
-    // Clear and focus quantity field
-    const quantityField = document.getElementById('orderQuantity');
-    if (quantityField) {
-        quantityField.value = '';
-        setTimeout(() => quantityField.focus(), 500); // Focus after modal opens
-        console.log('✅ Quantity field cleared and will be focused');
-    } else {
-        console.error('❌ Quantity field not found');
-    }
-    
-    // Clear notes field
-    const notesField = document.getElementById('orderNotes');
-    if (notesField) {
-        notesField.value = '';
-        console.log('✅ Notes field cleared');
-    } else {
-        console.error('❌ Notes field not found');
-    }
-    
-    // Show the modal
-    try {
-        const orderModal = new bootstrap.Modal(modal);
-        orderModal.show();
-        console.log('✅ Order modal shown successfully');
-        
-        // Add event listener for when modal is shown
-        modal.addEventListener('shown.bs.modal', function() {
-            console.log('🎯 Modal is now visible, focusing quantity field');
-            if (quantityField) {
-                quantityField.focus();
-            }
-        }, { once: true });
-        
-    } catch (error) {
-        console.error('❌ Error showing modal:', error);
-        alert('Error showing order modal: ' + error.message);
     }
 }
 
@@ -2361,413 +1993,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
-
-<style>
-/* Modern Tab Styling */
-.nav-tabs .nav-link {
-    border: none;
-    border-radius: 0;
-    color: #6c757d;
-    font-weight: 500;
-    padding: 12px 20px;
-    transition: all 0.3s ease;
-}
-
-.nav-tabs .nav-link:hover {
-    border-color: transparent;
-    color: #0d6efd;
-    background-color: #f8f9fa;
-}
-
-.nav-tabs .nav-link.active {
-    color: #0d6efd;
-    background-color: #fff;
-    border-color: #dee2e6 #dee2e6 #fff;
-    border-bottom: 2px solid #0d6efd;
-}
-
-/* Card Hover Effects */
-.card {
-    transition: all 0.3s ease;
-    border: 1px solid #e9ecef;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-/* Product Avatar */
-.product-avatar {
-    width: 32px;
-    height: 32px;
-    background: rgba(0, 123, 255, 0.1);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Avatar Circle Small */
-.avatar-circle-sm {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
-
-/* Button Styling */
-.btn {
-    transition: all 0.2s ease;
-}
-
-.btn:hover {
-    transform: scale(1.02);
-}
-
-/* Table Styling */
-.table th {
-    border-top: none;
-    font-weight: 600;
-    color: #495057;
-    background-color: #f8f9fa;
-}
-
-.table-hover tbody tr:hover {
-    background-color: #f8f9fa;
-}
-
-/* Form Styling */
-.form-control:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-}
-
-/* Progress Bars */
-.progress {
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.progress-bar {
-    border-radius: 10px;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .nav-tabs .nav-link {
-        padding: 8px 12px;
-        font-size: 0.9rem;
-    }
-    
-    .card-body {
-        padding: 1rem;
-    }
-    
-    .btn-sm {
-        font-size: 0.8rem;
-        padding: 0.25rem 0.5rem;
-    }
-}
-
-/* Loading States */
-.btn .fa-spinner {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Enhanced Actions & Orders Panel Styling */
-.discount-card, .notification-card, .order-queue-card {
-    transition: all 0.3s ease;
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.discount-card:hover, .notification-card:hover, .order-queue-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
-}
-
-/* Gradient Headers */
-.bg-gradient-warning {
-    background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
-}
-
-.bg-gradient-primary {
-    background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
-}
-
-.bg-gradient-info {
-    background: linear-gradient(135deg, #0dcaf0 0%, #0891b2 100%);
-}
-
-/* Icon Wrappers */
-.icon-wrapper {
-    width: 40px;
-    height: 40px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(10px);
-}
-
-/* Form Enhancements */
-.discount-form .form-control, 
-.notification-form .form-control,
-.discount-form .form-select,
-.notification-form .form-select {
-    border-radius: 8px;
-    border: 1px solid #e0e6ed;
-    padding: 0.75rem 1rem;
-    transition: all 0.3s ease;
-}
-
-.discount-form .form-control:focus, 
-.notification-form .form-control:focus,
-.discount-form .form-select:focus,
-.notification-form .form-select:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
-    transform: translateY(-1px);
-}
-
-/* Input Group Styling */
-.input-group-text {
-    border-radius: 8px;
-    border: 1px solid #e0e6ed;
-}
-
-.input-group .form-control {
-    border-left: 0;
-    border-right: 0;
-}
-
-.input-group .form-control:focus {
-    box-shadow: none;
-}
-
-/* Button Enhancements */
-.btn-lg {
-    padding: 0.75rem 1.5rem;
-    border-radius: 10px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.btn-lg:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-/* Order Queue Enhancements */
-.order-queue-container {
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 #f1f5f9;
-}
-
-.order-queue-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-.order-queue-container::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 3px;
-}
-
-.order-queue-container::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
-}
-
-.order-queue-container::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-.order-item {
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-.order-item:hover {
-    background-color: #f8f9fa;
-    transform: translateX(5px);
-}
-
-.order-item::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: transparent;
-    transition: all 0.3s ease;
-}
-
-.order-item:hover::before {
-    background: linear-gradient(135deg, #0dcaf0 0%, #0891b2 100%);
-}
-
-/* Badge Enhancements */
-.badge {
-    font-weight: 500;
-    padding: 0.4rem 0.8rem;
-    border-radius: 6px;
-}
-
-/* Form Text Styling */
-.form-text {
-    font-size: 0.8rem;
-    color: #6c757d;
-    margin-top: 0.5rem;
-}
-
-/* Priority Select Styling */
-#notification_priority option {
-    padding: 0.5rem;
-}
-
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-    .discount-card, .notification-card, .order-queue-card {
-        margin-bottom: 1.5rem;
-    }
-    
-    .icon-wrapper {
-        width: 35px;
-        height: 35px;
-    }
-    
-    .btn-lg {
-        padding: 0.6rem 1.2rem;
-        font-size: 0.9rem;
-    }
-}
-
-/* Animation for form submission */
-.discount-form.submitting .btn,
-.notification-form.submitting .btn {
-    pointer-events: none;
-    opacity: 0.7;
-}
-
-.discount-form.submitting .btn::after,
-.notification-form.submitting .btn::after {
-    content: '';
-    width: 16px;
-    height: 16px;
-    margin-left: 10px;
-    border: 2px solid transparent;
-    border-top-color: currentColor;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    display: inline-block;
-}
-
-/* Empty State Styling */
-.text-center.py-4 {
-    color: #6c757d;
-}
-
-.text-center.py-4 i {
-    opacity: 0.5;
-}
-
-/* Product Autocomplete Styling */
-#product_suggestions {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 1050;
-    background: white;
-    border: 1px solid #dee2e6;
-    border-radius: 0.375rem;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    max-height: 250px;
-    overflow-y: auto;
-}
-
-#product_suggestions .dropdown-item {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #f8f9fa;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-#product_suggestions .dropdown-item:last-child {
-    border-bottom: none;
-}
-
-#product_suggestions .dropdown-item:hover,
-#product_suggestions .dropdown-item.active {
-    background-color: #e3f2fd;
-    color: #1976d2;
-}
-
-#product_suggestions .dropdown-item strong {
-    color: #2c3e50;
-}
-
-#product_suggestions .dropdown-item .text-muted {
-    font-size: 0.875rem;
-}
-
-/* Enhanced form validation feedback */
-.form-control.is-valid {
-    border-color: #28a745;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='m2.3 6.73.94-.94 1.38 1.38 3.72-3.72.94.94-4.66 4.66z'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right calc(0.375em + 0.1875rem) center;
-    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
-}
-
-/* Readonly field styling */
-.form-control[readonly] {
-    background-color: #f8f9fa;
-    opacity: 1;
-}
-
-/* Team Management Styling */
-.avatar-circle {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 16px;
-}
-
-.progress {
-    border-radius: 10px;
-}
-
-.progress-bar {
-    border-radius: 10px;
-}
-
-/* Team cards hover effects */
-.card:hover {
-    transform: translateY(-2px);
-    transition: all 0.3s ease;
-}
-
-/* Button group styling */
-.btn-group-sm .btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-}
-</style>
 {% endblock %}

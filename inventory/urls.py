@@ -1,12 +1,11 @@
 from django.urls import path
-from django.contrib.auth.views import LogoutView
 from . import views
 
 urlpatterns = [
-    path('', views.home_view, name='home'),  # New home view with persistent login
+    path('', views.home_view, name='home'),
     path('signup/', views.user_signup, name='signup'),
     path('login/', views.user_login, name='login'),
-    path('logout/', LogoutView.as_view(next_page='home'), name='logout'),  # Redirect to home after logout
+    path('logout/', views.user_logout, name='logout'),
     path('inventory/', views.inventory_dashboard, name='inventory_dashboard'),
     path('trends/', views.trend_dashboard, name='trend_dashboard'),
     path('trend-dashboard/', views.trend_dashboard, name='trend_dashboard_ajax'),  # Alternative URL for AJAX
@@ -29,5 +28,4 @@ urlpatterns = [
     path('dismiss-recommendation/', views.dismiss_recommendation, name='dismiss_recommendation'),
     path('delete-team-member/', views.delete_team_member, name='delete_team_member'),
     path('get-user-profile/', views.get_user_profile, name='get_user_profile'),
-    path('test-eye-icon/', views.test_eye_icon, name='test_eye_icon'),  # Test page for eye icon
 ]

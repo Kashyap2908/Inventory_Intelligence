@@ -101,5 +101,11 @@ SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
 SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
 SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
 
+# CSRF Configuration
+CSRF_COOKIE_NAME = 'neurostock_csrftoken'
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = False  # Must be False so JS can read it
+CSRF_USE_SESSIONS = False
+
 # Remember Me functionality
 REMEMBER_ME_DURATION = 60 * 60 * 24 * 30  # 30 days

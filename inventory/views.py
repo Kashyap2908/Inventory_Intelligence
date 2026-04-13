@@ -310,8 +310,6 @@ def user_login(request):
                 messages.success(request, f'Welcome back, {user.first_name or user.username}!')
                 if profile.role == 'inventory':
                     return redirect('inventory_dashboard')
-                elif profile.role == 'marketing':
-                    return redirect('trend_dashboard')
                 elif profile.role == 'admin':
                     return redirect('admin_dashboard')
             except UserProfile.DoesNotExist:
@@ -320,6 +318,11 @@ def user_login(request):
             messages.error(request, 'Invalid username or password. Please try again.')
     
     return render(request, 'login.html')
+
+def user_logout(request):
+    from django.contrib.auth import logout
+    logout(request)
+    return redirect('home')
 
 def user_signup(request):
     # If user is already logged in, redirect to their dashboard
@@ -437,7 +440,8 @@ def inventory_dashboard(request):
     
     notifications_queryset = Notification.objects.filter(
         target_user_role__in=['inventory', 'all'],
-        is_read=False
+    ).exclude(
+        read_by=request.user
     ).annotate(
         priority_order=Case(
             When(priority='urgent', then=4),
@@ -454,18 +458,14 @@ def inventory_dashboard(request):
         )
     ).order_by('-admin_priority', '-priority_order', '-created_at')
     
-    # Get read notifications for history (last 20)
+    # Get read notifications for this specific user (last 20)
     try:
         read_notifications = Notification.objects.filter(
             target_user_role__in=['inventory', 'all'],
-            is_read=True
-        ).order_by('-created_at')[:20]  # Use created_at instead of updated_at
-    except Exception:
-        # Fallback if there are any database issues
-        read_notifications = Notification.objects.filter(
-            target_user_role__in=['inventory', 'all'],
-            is_read=True
+            read_by=request.user
         ).order_by('-created_at')[:20]
+    except Exception:
+        read_notifications = Notification.objects.none()
     
     # Count notifications by priority (before slicing)
     urgent_count = notifications_queryset.filter(priority='urgent').count()
@@ -752,12 +752,20 @@ def trend_dashboard(request):
     print("🔄 Auto-updating trend scores on page load...")
     from inventory.trend_calculator import calculate_trend_score
     
+    # Load configurable product limit from config.py
+    try:
+        from config import TREND_SCORE_PRODUCT_LIMIT
+    except ImportError:
+        TREND_SCORE_PRODUCT_LIMIT = 5  # fallback default
+
     products = Product.objects.all()
+    # Only update the oldest-updated products up to the limit
+    products_to_update = Product.objects.order_by('last_trend_update')[:TREND_SCORE_PRODUCT_LIMIT]
     updated_count = 0
     
-    for product in products:
+    for product in products_to_update:
         old_score = product.trend_score
-        new_score = calculate_trend_score(product)  # Uses simulation by default
+        new_score = calculate_trend_score(product, force_ai=True)  # Uses simulation by default
         
         if abs(old_score - new_score) > 0.1:  # Only update if significant change
             product.trend_score = new_score
@@ -794,83 +802,6 @@ def trend_dashboard(request):
         'latest_update': latest_update.last_trend_update if latest_update else None,
     }
     return render(request, 'trend_dashboard.html', context)
-
-
-@login_required
-def get_product_details(request, product_id):
-    """Get detailed product information for the eye icon"""
-    try:
-        product = Product.objects.get(id=product_id)
-        
-        # Get recent stock entries
-        recent_stock = ExpiryStock.objects.filter(product=product).order_by('-created_at')[:5]
-        
-        # Get recent sales
-        recent_sales = SalesBillItem.objects.filter(product=product).order_by('-bill__created_at')[:5]
-        
-        # Calculate some metrics
-        from django.db import models
-        total_sales_this_month = SalesBillItem.objects.filter(
-            product=product,
-            bill__created_at__month=timezone.now().month
-        ).aggregate(total=models.Sum('quantity'))['total'] or 0
-        
-        # Get AI recommendations for this product
-        ai_recommendations = AIRecommendation.objects.filter(
-            product=product,
-            status='pending'
-        ).order_by('-created_at')
-        
-        data = {
-            'product': {
-                'id': product.id,
-                'name': product.name,
-                'category': product.category,
-                'cost_price': float(product.cost_price),
-                'selling_price': float(product.selling_price),
-                'current_price': float(product.new_price),
-                'abc_classification': product.calculated_abc_classification,
-                'total_stock': product.total_stock,
-                'trend_score': float(product.trend_score),
-                'last_trend_update': product.last_trend_update.isoformat() if product.last_trend_update else None,
-            },
-            'recent_stock': [
-                {
-                    'quantity': stock.quantity,
-                    'expiry_date': stock.expiry_date.strftime('%Y-%m-%d'),
-                    'created_at': stock.created_at.strftime('%Y-%m-%d %H:%M'),
-                }
-                for stock in recent_stock
-            ],
-            'recent_sales': [
-                {
-                    'quantity': sale.quantity,
-                    'price': float(sale.price),
-                    'total': float(sale.total),
-                    'date': sale.bill.created_at.strftime('%Y-%m-%d %H:%M'),
-                }
-                for sale in recent_sales
-            ],
-            'metrics': {
-                'total_sales_this_month': total_sales_this_month,
-                'stock_turnover': round(total_sales_this_month / max(product.total_stock, 1), 2),
-                'days_of_stock': round(product.total_stock / max(total_sales_this_month / 30, 1), 1) if total_sales_this_month > 0 else 999,
-            },
-            'ai_recommendations': [
-                {
-                    'type': rec.recommendation_type,
-                    'text': rec.recommendation_text,
-                    'suggested_value': float(rec.suggested_value) if rec.suggested_value else None,
-                    'suggested_quantity': rec.suggested_quantity,
-                }
-                for rec in ai_recommendations
-            ]
-        }
-        
-        return JsonResponse(data)
-        
-    except Product.DoesNotExist:
-        return JsonResponse({'error': 'Product not found'}, status=404)
 
 
 
@@ -2509,15 +2440,6 @@ def home_view(request):
         # User is not logged in, redirect to signup page (create account first)
         return redirect('signup')
 
-@login_required
-def test_eye_icon(request):
-    """Test page for eye icon functionality"""
-    from django.http import HttpResponse
-    
-    with open('test_eye_icon.html', 'r') as f:
-        content = f.read()
-    
-    return HttpResponse(content)
 
 @login_required
 def product_autocomplete_api(request):

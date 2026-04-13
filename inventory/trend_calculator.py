@@ -18,6 +18,9 @@ try:
     NEW_SDK_AVAILABLE = True
 except ImportError:
     NEW_SDK_AVAILABLE = False
+    # Define a dummy BaseModel so the class definition below doesn't fail
+    class BaseModel:
+        pass
     print("⚠️ New google.genai SDK not available, will use fallback")
 
 
@@ -98,7 +101,7 @@ Return your analysis with a score and brief reasoning."""
             
             # Step 3: Request JSON Output with structured schema
             response = client.models.generate_content(
-                model="gemini-2.0-flash",  # Use stable 1.5 model
+                model="gemini-2.5-flash",  # Use stable 1.5 model
                 contents=prompt,
                 config={
                     'response_mime_type': 'application/json',
