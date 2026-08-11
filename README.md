@@ -96,7 +96,6 @@ Inventory_Intelligence/
 │   ├── urls.py
 │   └── wsgi.py
 ├── manage.py
-├── config.py                     # API key (optional, git-ignored)
 ├── requirements.txt
 ├── add_all_products.py           # Seed script: product catalogue
 └── setup_company_stock.py        # Seed script: company warehouse stock
