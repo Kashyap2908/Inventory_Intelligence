@@ -72,7 +72,7 @@ See [Trend Analysis & AI Integration](#trend-analysis--ai-integration) for full 
 ```
 Inventory_Intelligence/
 ├── inventory/                    # Main Django application
-│   ├── models.py                 # 9 database models
+│   ├── models.py                 # database models
 │   ├── views.py                  # 20+ views and business logic
 │   ├── forms.py                  # Django form definitions
 │   ├── urls.py                   # URL routing (25+ endpoints)
@@ -245,11 +245,23 @@ Simulation mode works offline, consumes no API quota, and is the recommended def
 
 To use real AI-powered scoring:
 
-1. **Create `config.py`** in the project root (it is already listed in `.gitignore`):
+1. **Supply your API key** using either method below.
+   Obtain a key from <https://makersuite.google.com/app/apikey>.
+
+   **Option A — `config.py`** (git-ignored, checked first):
    ```python
+   # config.py
    GOOGLE_API_KEY = "your-api-key-here"
    ```
-   Obtain a key from <https://makersuite.google.com/app/apikey>.
+
+   **Option B — environment variable**:
+   ```bash
+   # Linux / macOS
+   export GOOGLE_API_KEY=your-api-key-here
+
+   # Windows (PowerShell)
+   $env:GOOGLE_API_KEY="your-api-key-here"
+   ```
 
 2. **Pass `--use-ai`** to any trend command:
    ```bash
@@ -258,7 +270,7 @@ To use real AI-powered scoring:
    ```
    The Trend Dashboard can also be switched to AI mode by changing `calculate_trend_score(product)` to `calculate_trend_score(product, force_ai=True)` in `inventory/views.py`.
 
-> **Important:** `config.py` is listed in `.gitignore` and must **never** be committed to version control. Do not expose your API key in any tracked file.
+> **Important:** `config.py` is listed in `.gitignore` and must **never** be committed to version control. Do not expose your API key in any tracked file. If you use an environment variable instead, ensure it is not logged or stored in shell history.
 
 If no valid key is present, the system falls back to simulation automatically — no crash, no data loss.
 
